@@ -33,9 +33,12 @@
             </div>
             <h3 id="teks-soal">Pertanyaan akan muncul di sini</h3>
             <div id="wadah-opsi"></div>
-            <button id="tombol-lanjut" onclick="soalSelanjutnya()" style="display: none;">Selanjutnya</button>
-            <button id="tombol-kirim" onclick="kirimNilai()" style="display: none;">Kirim Jawaban Akhir</button>
-        </div>
+            <div class="navigasi-tombol">
+                <button id="tombol-kembali" onclick="soalSebelumnya()" style="display: none; background-color: #6c757d;">Kembali</button>
+                <button id="tombol-ragu" onclick="tandaiRagu()" style="background-color: #ffc107; color: black; display: none;">Ragu-ragu</button>
+                <button id="tombol-lanjut" onclick="soalSelanjutnya()">Selanjutnya</button>
+                <button id="tombol-kirim" onclick="kirimNilai()" style="display: none;">Kirim Jawaban Akhir</button>
+            </div>
 
         <!-- Halaman Selesai -->
         <div id="halaman-selesai" style="display: none;">
