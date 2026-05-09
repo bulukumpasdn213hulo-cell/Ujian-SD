@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Ujian Sekolah</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Halaman Login -->
+        <div id="halaman-login">
+            <h2>Selamat Datang di Ujian</h2>
+            <p>Silakan isi data diri sebelum mulai</p>
+            <input type="text" id="input-nama" placeholder="Tulis Nama Lengkap" required>
+            <select id="input-kelas">
+                <option value="">-- Pilih Kelas --</option>
+                <option value="Kelas 1">Kelas 1</option>
+                <option value="Kelas 2">Kelas 2</option>
+                <option value="Kelas 3">Kelas 3</option>
+                <option value="Kelas 4">Kelas 4</option>
+                <option value="Kelas 5">Kelas 5</option>
+                <option value="Kelas 6">Kelas 6</option>
+            </select>
+            <button onclick="mulaiUjian()">Mulai Ujian</button>
+        </div>
+
+        <!-- Halaman Soal Ujian -->
+        <div id="halaman-ujian" style="display: none;">
+            <div class="header-ujian">
+                <span id="info-siswa"></span>
+                <span id="nomor-soal"></span>
+            </div>
+            <h3 id="teks-soal">Pertanyaan akan muncul di sini</h3>
+            <div id="wadah-opsi"></div>
+            <button id="tombol-lanjut" onclick="soalSelanjutnya()" style="display: none;">Selanjutnya</button>
+            <button id="tombol-kirim" onclick="kirimNilai()" style="display: none;">Kirim Jawaban Akhir</button>
+        </div>
+
+        <!-- Halaman Selesai -->
+        <div id="halaman-selesai" style="display: none;">
+            <h2>Ujian Selesai!</h2>
+            <p id="pesan-status">Sedang menyimpan nilai Anda ke sistem...</p>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
