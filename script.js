@@ -56,8 +56,8 @@ const bankSoal = [
 ];
 
 let soalSaatIni = 0;
-let skor = 0;
-let jawabanDipilih = null;
+let jawabanSiswa = []; // Mengingat jawaban siswa
+let statusRagu = [];   // Mengingat mana yang ragu-ragu
 let dataSiswa = { nama: "", kelas: "" };
 
 function mulaiUjian() {
@@ -69,6 +69,10 @@ function mulaiUjian() {
         return;
     }
 
+    // Menyiapkan lembar jawaban kosong sebanyak jumlah soal
+    jawabanSiswa = new Array(bankSoal.length).fill(null);
+    statusRagu = new Array(bankSoal.length).fill(false);
+
     document.getElementById("halaman-login").style.display = "none";
     document.getElementById("halaman-ujian").style.display = "block";
     document.getElementById("info-siswa").innerText = dataSiswa.nama + " (" + dataSiswa.kelas + ")";
@@ -77,82 +81,123 @@ function mulaiUjian() {
 }
 
 function tampilkanSoal() {
-    jawabanDipilih = null;
     const soal = bankSoal[soalSaatIni];
-    
     document.getElementById("nomor-soal").innerText = "Soal " + (soalSaatIni + 1) + " dari " + bankSoal.length;
     document.getElementById("teks-soal").innerText = soal.pertanyaan;
     
     const wadahOpsi = document.getElementById("wadah-opsi");
-    wadahOpsi.innerHTML = ""; // Bersihkan opsi sebelumnya
+    wadahOpsi.innerHTML = "";
 
+    // Memunculkan opsi dan mengecek apakah sebelumnya sudah dijawab
     soal.opsi.forEach((teksOpsi, index) => {
         const elemenOpsi = document.createElement("div");
         elemenOpsi.className = "opsi-jawaban";
+        
+        // Memulihkan warna jika sudah dijawab atau ragu-ragu sebelumnya
+        if (jawabanSiswa[soalSaatIni] === index) {
+            elemenOpsi.classList.add("terpilih");
+            if (statusRagu[soalSaatIni]) {
+                elemenOpsi.classList.add("ragu");
+            }
+        }
+
         elemenOpsi.innerText = teksOpsi;
         elemenOpsi.onclick = () => pilihJawaban(elemenOpsi, index);
         wadahOpsi.appendChild(elemenOpsi);
     });
 
-    document.getElementById("tombol-lanjut").style.display = "none";
-    document.getElementById("tombol-kirim").style.display = "none";
+    aturTombolNavigasi();
 }
 
 function pilihJawaban(elemen, index) {
-    // Hapus warna hijau dari pilihan sebelumnya
     const semuaOpsi = document.querySelectorAll(".opsi-jawaban");
-    semuaOpsi.forEach(opsi => opsi.classList.remove("terpilih"));
+    semuaOpsi.forEach(opsi => {
+        opsi.classList.remove("terpilih");
+        opsi.classList.remove("ragu");
+    });
 
-    // Tambahkan warna hijau ke pilihan saat ini
     elemen.classList.add("terpilih");
-    jawabanDipilih = index;
+    jawabanSiswa[soalSaatIni] = index; // Simpan jawaban ke memori
+    statusRagu[soalSaatIni] = false;   // Hilangkan status ragu jika memilih ulang
+    
+    aturTombolNavigasi();
+}
 
-    // Munculkan tombol selanjutnya/kirim
-    if (soalSaatIni < bankSoal.length - 1) {
-        document.getElementById("tombol-lanjut").style.display = "block";
+function tandaiRagu() {
+    if (jawabanSiswa[soalSaatIni] !== null) {
+        statusRagu[soalSaatIni] = !statusRagu[soalSaatIni]; // Ubah status ragu
+        tampilkanSoal(); // Segarkan tampilan
     } else {
-        document.getElementById("tombol-kirim").style.display = "block";
+        alert("Pilih jawaban terlebih dahulu sebelum menandai ragu-ragu!");
     }
 }
 
 function soalSelanjutnya() {
-    if (jawabanDipilih === bankSoal[soalSaatIni].jawabanBenar) {
-        skor += (100 / bankSoal.length); // Hitung nilai proporsional
+    if (soalSaatIni < bankSoal.length - 1) {
+        soalSaatIni++;
+        tampilkanSoal();
     }
-    soalSaatIni++;
-    tampilkanSoal();
+}
+
+function soalSebelumnya() {
+    if (soalSaatIni > 0) {
+        soalSaatIni--;
+        tampilkanSoal();
+    }
+}
+
+function aturTombolNavigasi() {
+    // Tombol Kembali
+    document.getElementById("tombol-kembali").style.display = (soalSaatIni === 0) ? "none" : "block";
+
+    // Tombol Ragu-ragu muncul jika sudah ada jawaban
+    document.getElementById("tombol-ragu").style.display = (jawabanSiswa[soalSaatIni] !== null) ? "block" : "none";
+    document.getElementById("tombol-ragu").innerText = statusRagu[soalSaatIni] ? "Batal Ragu" : "Ragu-ragu";
+
+    // Tombol Lanjut dan Kirim
+    if (soalSaatIni === bankSoal.length - 1) {
+        document.getElementById("tombol-lanjut").style.display = "none";
+        document.getElementById("tombol-kirim").style.display = "block";
+    } else {
+        document.getElementById("tombol-lanjut").style.display = "block";
+        document.getElementById("tombol-kirim").style.display = "none";
+    }
 }
 
 function kirimNilai() {
-    // Cek jawaban terakhir
-    if (jawabanDipilih === bankSoal[soalSaatIni].jawabanBenar) {
-        skor += (100 / bankSoal.length);
+    // Cek apakah ada soal yang belum dijawab
+    if (jawabanSiswa.includes(null)) {
+        alert("Masih ada soal yang belum dijawab. Silakan periksa kembali!");
+        return;
+    }
+
+    // Hitung skor akhir
+    let skorAkhir = 0;
+    for (let i = 0; i < bankSoal.length; i++) {
+        if (jawabanSiswa[i] === bankSoal[i].jawabanBenar) {
+            skorAkhir += (100 / bankSoal.length);
+        }
     }
 
     document.getElementById("halaman-ujian").style.display = "none";
     document.getElementById("halaman-selesai").style.display = "block";
 
-    // Format data yang akan dikirim ke Google Sheets
     const dataKirim = {
         nama: dataSiswa.nama,
         kelas: dataSiswa.kelas,
-        nilai: Math.round(skor) // Dibulatkan agar tidak ada desimal panjang
+        nilai: Math.round(skorAkhir)
     };
 
-    // Proses pengiriman data via API
     fetch(URL_DATABASE, {
         method: "POST",
-        mode: 'no-cors', // Penting untuk menghindari error block pada Google Apps Script
-        headers: {
-            "Content-Type": "application/json"
-        },
+        mode: 'no-cors',
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dataKirim)
     })
     .then(() => {
-        document.getElementById("pesan-status").innerText = "Selesai! Nilai Anda (" + Math.round(skor) + ") berhasil dikirim ke guru.";
+        document.getElementById("pesan-status").innerText = "Selesai! Nilai Anda (" + Math.round(skorAkhir) + ") berhasil dikirim.";
     })
     .catch(error => {
-        document.getElementById("pesan-status").innerText = "Terjadi kesalahan saat mengirim data. Silakan lapor ke guru.";
-        console.error("Error:", error);
+        document.getElementById("pesan-status").innerText = "Terjadi kesalahan. Silakan lapor ke guru.";
     });
 }
