@@ -4,19 +4,54 @@ const URL_DATABASE = "https://script.google.com/macros/s/AKfycbwzcZWkup1RTL1v-9q
 // Bank Soal (Bisa ditambah atau diubah sesuai materi IPAS/lainnya)
 const bankSoal = [
     {
-        pertanyaan: "Tindakan mana yang paling tepat untuk mengurangi jejak kemasan plastik di lingkungan sekolah?",
-        opsi: ["Membakar sampah plastik di belakang sekolah", "Membawa botol minum sendiri dari rumah", "Mengubur plastik di dalam tanah", "Membuang plastik ke sungai"],
-        jawabanBenar: 1 // Ingat: urutan dimulai dari 0. Jadi indeks 1 adalah opsi kedua.
+        pertanyaan: "Siapakah nama Bapak Pandu Sedunia?",
+        opsi: ["Baden Powell", "William Smith", "Ir. Soekarno", "Sri Sultan Hamengkubuwono IX"],
+        jawabanBenar: 0
     },
     {
-        pertanyaan: "Proses pembuatan makanan pada tumbuhan hijau dengan bantuan cahaya matahari disebut...",
-        opsi: ["Respirasi", "Transpirasi", "Fotosintesis", "Adaptasi"],
+        pertanyaan: "Siapakah tokoh yang dikenal sebagai Bapak Pramuka Indonesia?",
+        opsi: ["Ki Hajar Dewantara", "Jenderal Sudirman", "Sri Sultan Hamengkubuwono IX", "B.J. Habibie"],
         jawabanBenar: 2
     },
     {
-        pertanyaan: "Ibukota negara Indonesia saat ini adalah...",
-        opsi: ["Surabaya", "Bandung", "Medan", "Jakarta"],
+        pertanyaan: "Lambang Gerakan Pramuka di Indonesia adalah...",
+        opsi: ["Bintang emas", "Pohon beringin", "Tunas kelapa", "Padi dan kapas"],
+        jawabanBenar: 2
+    },
+    {
+        pertanyaan: "Hari Pramuka di Indonesia diperingati setiap tanggal...",
+        opsi: ["14 Agustus", "17 Agustus", "2 Mei", "1 Juni"],
+        jawabanBenar: 0
+    },
+    {
+        pertanyaan: "Golongan Pramuka untuk anak seusia 7 sampai 10 tahun disebut...",
+        opsi: ["Penggalang", "Siaga", "Penegak", "Pandega"],
+        jawabanBenar: 1
+    },
+    {
+        pertanyaan: "Warna pakaian seragam utama Gerakan Pramuka adalah...",
+        opsi: ["Merah dan Putih", "Hijau Muda dan Hijau Tua", "Biru Tua dan Biru Muda", "Cokelat Tua dan Cokelat Muda"],
         jawabanBenar: 3
+    },
+    {
+        pertanyaan: "Janji atau kode kehormatan bagi Pramuka Siaga disebut...",
+        opsi: ["Dwi Satya", "Tri Satya", "Dasa Darma", "Dwi Darma"],
+        jawabanBenar: 0
+    },
+    {
+        pertanyaan: "Bunyi Dasa Darma Pramuka yang pertama adalah...",
+        opsi: ["Cinta alam dan kasih sayang sesama manusia", "Takwa kepada Tuhan Yang Maha Esa", "Patuh dan suka bermusyawarah", "Rajin, terampil, dan gembira"],
+        jawabanBenar: 1
+    },
+    {
+        pertanyaan: "Satuan kelompok terkecil dalam Pramuka Siaga disebut...",
+        opsi: ["Regu", "Sangga", "Barung", "Reka"],
+        jawabanBenar: 2
+    },
+    {
+        pertanyaan: "Berapa kali jumlah tepukan pada 'Tepuk Pramuka'?",
+        opsi: ["10 kali", "12 kali", "13 kali", "15 kali"],
+        jawabanBenar: 2
     }
 ];
 
