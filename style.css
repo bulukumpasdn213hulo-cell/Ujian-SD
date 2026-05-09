@@ -91,3 +91,24 @@ button:hover {
     background-color: #fff3cd;
     border-color: #ffc107;
 }
+
+/* Gaya untuk kotak isian esai/paragraf */
+.input-esai {
+    width: 100%;
+    height: 150px;
+    padding: 12px;
+    margin: 10px 0;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 15px;
+    box-sizing: border-box;
+    resize: vertical;
+    background-color: #fcfcfc;
+}
+
+.input-esai:focus {
+    outline: none;
+    border-color: #4CAF50;
+    background-color: #ffffff;
+}
