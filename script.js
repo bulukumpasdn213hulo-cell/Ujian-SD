@@ -19,17 +19,24 @@ const bankSoal = [
     }
 ];
 
+// --- PENGATURAN WAKTU UJIAN (DALAM MENIT) ---
+const WAKTU_UJIAN_MENIT = 60; 
+
 let soalSaatIni = 0;
 let jawabanSiswa = []; 
 let statusRagu = [];   
-let dataSiswa = { nama: "", kelas: "" };
+let dataSiswa = { nama: "", kelas: "", mapel: "" };
+
+let sisaWaktu;
+let intervalWaktu;
 
 function mulaiUjian() {
     dataSiswa.nama = document.getElementById("input-nama").value;
     dataSiswa.kelas = document.getElementById("input-kelas").value;
+    dataSiswa.mapel = document.getElementById("input-mapel").value;
 
-    if (dataSiswa.nama === "" || dataSiswa.kelas === "") {
-        alert("Mohon isi Nama dan Kelas terlebih dahulu!");
+    if (dataSiswa.nama === "" || dataSiswa.kelas === "" || dataSiswa.mapel === "") {
+        alert("Mohon lengkapi Nama, Kelas, dan Mata Pelajaran!");
         return;
     }
 
@@ -38,9 +45,36 @@ function mulaiUjian() {
 
     document.getElementById("halaman-login").style.display = "none";
     document.getElementById("halaman-ujian").style.display = "block";
-    document.getElementById("info-siswa").innerText = dataSiswa.nama + " (" + dataSiswa.kelas + ")";
+    document.getElementById("info-siswa").innerText = dataSiswa.nama + " - " + dataSiswa.mapel;
+    
+    // Memulai hitung mundur
+    sisaWaktu = WAKTU_UJIAN_MENIT * 60;
+    jalankanTimer();
     
     tampilkanSoal();
+}
+
+function jalankanTimer() {
+    clearInterval(intervalWaktu);
+    intervalWaktu = setInterval(() => {
+        sisaWaktu--;
+        
+        let menit = Math.floor(sisaWaktu / 60);
+        let detik = sisaWaktu % 60;
+        
+        // Menambahkan angka 0 di depan jika di bawah 10
+        let teksMenit = menit < 10 ? "0" + menit : menit;
+        let teksDetik = detik < 10 ? "0" + detik : detik;
+        
+        document.getElementById("waktu-mundur").innerText = teksMenit + ":" + teksDetik;
+
+        // Jika waktu habis
+        if (sisaWaktu <= 0) {
+            clearInterval(intervalWaktu);
+            alert("Waktu ujian telah habis! Jawaban Anda akan dikirim secara otomatis.");
+            kirimNilai(true); // true = abaikan peringatan soal kosong
+        }
+    }, 1000);
 }
 
 function tampilkanSoal() {
@@ -51,7 +85,6 @@ function tampilkanSoal() {
     const wadahOpsi = document.getElementById("wadah-opsi");
     wadahOpsi.innerHTML = "";
 
-    // JIKA SOAL PILIHAN GANDA
     if (soal.tipe === "ganda") {
         soal.opsi.forEach((teksOpsi, index) => {
             const elemenOpsi = document.createElement("div");
@@ -66,19 +99,15 @@ function tampilkanSoal() {
             elemenOpsi.onclick = () => pilihJawabanGanda(elemenOpsi, index);
             wadahOpsi.appendChild(elemenOpsi);
         });
-    } 
-    // JIKA SOAL ESAI/PARAGRAF
-    else if (soal.tipe === "esai") {
+    } else if (soal.tipe === "esai") {
         const elemenEsai = document.createElement("textarea");
         elemenEsai.className = "input-esai";
-        elemenEsai.placeholder = "Ketik jawaban refleksi kamu di sini secara detail...";
+        elemenEsai.placeholder = "Ketik jawaban refleksi kamu di sini...";
         
-        // Memunculkan kembali teks jika siswa menekan tombol "Kembali"
         if (jawabanSiswa[soalSaatIni] !== null) {
             elemenEsai.value = jawabanSiswa[soalSaatIni];
         }
 
-        // Menyimpan ketikan siswa secara langsung
         elemenEsai.oninput = (e) => {
             jawabanSiswa[soalSaatIni] = e.target.value;
             aturTombolNavigasi();
@@ -128,7 +157,6 @@ function aturTombolNavigasi() {
     const soal = bankSoal[soalSaatIni];
     document.getElementById("tombol-kembali").style.display = (soalSaatIni === 0) ? "none" : "block";
 
-    // Tombol ragu hanya untuk pilihan ganda
     if (soal.tipe === "ganda" && jawabanSiswa[soalSaatIni] !== null) {
         document.getElementById("tombol-ragu").style.display = "block";
         document.getElementById("tombol-ragu").innerText = statusRagu[soalSaatIni] ? "Batal Ragu" : "Ragu-ragu";
@@ -145,22 +173,27 @@ function aturTombolNavigasi() {
     }
 }
 
-function kirimNilai() {
-    // Validasi: Cek apakah ada yang belum dijawab (atau kosong untuk esai)
-    for (let i = 0; i < bankSoal.length; i++) {
-        if (bankSoal[i].tipe === "ganda" && jawabanSiswa[i] === null) {
-            alert("Nomor " + (i+1) + " belum dijawab!"); return;
-        }
-        if (bankSoal[i].tipe === "esai" && (jawabanSiswa[i] === null || jawabanSiswa[i].trim() === "")) {
-            alert("Esai nomor " + (i+1) + " tidak boleh kosong!"); return;
+// Parameter waktuHabis mendeteksi apakah sistem yang memaksa kirim atau siswa
+function kirimNilai(waktuHabis) {
+    // Jika dikirim manual oleh siswa, lakukan pengecekan soal kosong
+    if (!waktuHabis) {
+        for (let i = 0; i < bankSoal.length; i++) {
+            if (bankSoal[i].tipe === "ganda" && jawabanSiswa[i] === null) {
+                alert("Nomor " + (i+1) + " belum dijawab!"); return;
+            }
+            if (bankSoal[i].tipe === "esai" && (jawabanSiswa[i] === null || jawabanSiswa[i].trim() === "")) {
+                alert("Esai nomor " + (i+1) + " tidak boleh kosong!"); return;
+            }
         }
     }
+
+    // Hentikan timer agar tidak terus berjalan di latar belakang
+    clearInterval(intervalWaktu);
 
     let skorAkhirPG = 0;
     let jumlahPG = 0;
     let daftarEsai = [];
 
-    // Pemisahan penilaian otomatis (PG) dan pengumpulan teks (Esai)
     for (let i = 0; i < bankSoal.length; i++) {
         if (bankSoal[i].tipe === "ganda") {
             jumlahPG++;
@@ -168,22 +201,22 @@ function kirimNilai() {
                 skorAkhirPG += 1;
             }
         } else if (bankSoal[i].tipe === "esai") {
-            // Merangkai jawaban esai menjadi satu paragraf panjang untuk Google Sheets
-            daftarEsai.push("Soal " + (i+1) + ": " + jawabanSiswa[i]);
+            let teksJawaban = jawabanSiswa[i] ? jawabanSiswa[i] : "(Kosong karena waktu habis)";
+            daftarEsai.push("Soal " + (i+1) + ": " + teksJawaban);
         }
     }
 
-    // Kalkulasi nilai 100 khusus untuk PG
     let nilaiTotal = (jumlahPG > 0) ? Math.round((skorAkhirPG / jumlahPG) * 100) : 0;
-    let gabunganEsai = daftarEsai.join("\n\n---\n"); // Pemisah antar jawaban esai
+    let gabunganEsai = daftarEsai.join("\n\n---\n"); 
 
     document.getElementById("halaman-ujian").style.display = "none";
     document.getElementById("halaman-selesai").style.display = "block";
-    document.getElementById("pesan-status").innerText = "Sedang mengirim laporan refleksi proyek Anda...";
+    document.getElementById("pesan-status").innerText = "Sedang mengirim lembar jawaban Anda...";
 
     const dataKirim = {
         nama: dataSiswa.nama,
         kelas: dataSiswa.kelas,
+        mapel: dataSiswa.mapel, // <-- Mengirim data mata pelajaran ke database
         nilai: nilaiTotal,
         esai: gabunganEsai
     };
@@ -195,11 +228,11 @@ function kirimNilai() {
         body: JSON.stringify(dataKirim)
     })
     .then(() => {
-        let pesanAkhir = "Laporan Refleksi berhasil dikirim!";
+        let pesanAkhir = "Berhasil! Nilai Anda sudah masuk ke sistem sekolah.";
         if (jumlahPG > 0) pesanAkhir += "\nSkor Pilihan Ganda: " + nilaiTotal;
         document.getElementById("pesan-status").innerText = pesanAkhir;
     })
     .catch(error => {
-        document.getElementById("pesan-status").innerText = "Terjadi kesalahan koneksi. Lapor ke guru pendamping.";
+        document.getElementById("pesan-status").innerText = "Terjadi kesalahan jaringan. Jangan tutup halaman ini dan lapor ke pengawas.";
     });
 }
