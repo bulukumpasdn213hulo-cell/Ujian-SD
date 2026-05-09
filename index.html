@@ -13,6 +13,7 @@
             <h2>Selamat Datang di Ujian</h2>
             <p>Silakan isi data diri sebelum mulai</p>
             <input type="text" id="input-nama" placeholder="Tulis Nama Lengkap" required>
+            
             <select id="input-kelas">
                 <option value="">-- Pilih Kelas --</option>
                 <option value="Kelas 1">Kelas 1</option>
@@ -22,6 +23,16 @@
                 <option value="Kelas 5">Kelas 5</option>
                 <option value="Kelas 6">Kelas 6</option>
             </select>
+
+            <!-- Input Mata Pelajaran Baru -->
+            <select id="input-mapel">
+                <option value="">-- Pilih Mata Pelajaran --</option>
+                <option value="Pemahaman IPAS">Pemahaman IPAS</option>
+                <option value="Matematika">Matematika</option>
+                <option value="Bahasa Indonesia">Bahasa Indonesia</option>
+                <option value="Pendidikan Pancasila">Pendidikan Pancasila</option>
+            </select>
+
             <button onclick="mulaiUjian()">Mulai Ujian</button>
         </div>
 
@@ -29,17 +40,18 @@
         <div id="halaman-ujian" style="display: none;">
             <div class="header-ujian">
                 <span id="info-siswa"></span>
+                <!-- Indikator Waktu Baru -->
+                <span style="color: #d9534f; font-weight: bold;">Waktu: <span id="waktu-mundur">00:00</span></span>
                 <span id="nomor-soal"></span>
             </div>
             <h3 id="teks-soal">Pertanyaan akan muncul di sini</h3>
             <div id="wadah-opsi"></div>
             
-            <!-- Navigasi Tombol Baru -->
             <div class="navigasi-tombol">
                 <button id="tombol-kembali" onclick="soalSebelumnya()" style="display: none; background-color: #6c757d;">Kembali</button>
                 <button id="tombol-ragu" onclick="tandaiRagu()" style="background-color: #ffc107; color: black; display: none;">Ragu-ragu</button>
                 <button id="tombol-lanjut" onclick="soalSelanjutnya()">Selanjutnya</button>
-                <button id="tombol-kirim" onclick="kirimNilai()" style="display: none;">Kirim Jawaban Akhir</button>
+                <button id="tombol-kirim" onclick="kirimNilai(false)" style="display: none;">Kirim Jawaban Akhir</button>
             </div>
         </div>
 
