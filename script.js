@@ -309,7 +309,7 @@ function kirimNilai(waktuHabis) {
     if (!waktuHabis) {
         for (let i = 0; i < bankSoal.length; i++) {
             if (bankSoal[i].tipe === "ganda" && jawabanSiswa[i] === null) {
-                lompatKeSoal(i); // Langsung otomatis lompat ke soal yang kosong
+                lompatKeSoal(i);
                 alert("Misi nomor " + (i+1) + " belum diselesaikan!"); return;
             }
             if (bankSoal[i].tipe === "esai" && (jawabanSiswa[i] === null || jawabanSiswa[i].trim() === "")) {
@@ -318,6 +318,60 @@ function kirimNilai(waktuHabis) {
             }
         }
     }
+
+    clearInterval(intervalWaktu);
+
+    let jumlahBenar = 0;
+    let jumlahPG = 0;
+    let daftarEsai = [];
+    let poinPerSoal = []; // ARRAY BARU: Untuk menyimpan 1 atau 0 tiap nomor
+
+    for (let i = 0; i < bankSoal.length; i++) {
+        if (bankSoal[i].tipe === "ganda") {
+            jumlahPG++;
+            if (jawabanSiswa[i] === bankSoal[i].jawabanBenar) {
+                jumlahBenar++;
+                poinPerSoal.push(1); // Simpan angka 1 jika benar
+            } else {
+                poinPerSoal.push(0); // Simpan angka 0 jika salah
+            }
+        } else if (bankSoal[i].tipe === "esai") {
+            let teksJawaban = jawabanSiswa[i] ? jawabanSiswa[i] : "(Kosong)";
+            daftarEsai.push("Soal " + (i+1) + ": " + teksJawaban);
+        }
+    }
+
+    let nilaiTotal = (jumlahPG > 0) ? Math.round((jumlahBenar / jumlahPG) * 100) : 0;
+    let gabunganEsai = daftarEsai.join("\n\n---\n"); 
+
+    document.getElementById("halaman-ujian").style.display = "none";
+    document.getElementById("halaman-selesai").style.display = "block";
+    document.getElementById("hasil-benar").innerText = jumlahBenar;
+    document.getElementById("hasil-salah").innerText = jumlahPG - jumlahBenar;
+    document.getElementById("hasil-total").innerText = nilaiTotal;
+
+    const dataKirim = {
+        nama: dataSiswa.nama,
+        kelas: dataSiswa.kelas,
+        mapel: dataSiswa.mapel, 
+        poin: poinPerSoal, // MENGIRIM ARRAY POIN [1,0,1,1...]
+        nilai: nilaiTotal,
+        esai: gabunganEsai
+    };
+
+    fetch(URL_DATABASE, {
+        method: "POST",
+        mode: 'no-cors',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dataKirim)
+    })
+    .then(() => {
+        document.getElementById("pesan-status").innerText = "Data sukses disinkronkan ke Google Sheets!";
+    })
+    .catch(error => {
+        document.getElementById("pesan-status").innerText = "Gagal menyinkronkan data.";
+    });
+}
 
     clearInterval(intervalWaktu);
 
