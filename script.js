@@ -1,8 +1,8 @@
 // --- 1. KONFIGURASI ---
-const URL_DATABASE = "https://script.google.com/macros/s/AKfycbwzcZWkup1RTL1v-9qDJgoTI3npt-ys5w0l0c7Zfig9ZQV8UdbcE1VHzOsuiT3DJId7/exec";
+const URL_DATABASE = "URL_WEB_APP_ANDA_DISINI";
 const WAKTU_UJIAN_MENIT = 60; 
 
-let bankSoal = []; // Sekarang kosong, akan diisi otomatis dari Google Sheets
+let bankSoal = []; 
 let soalSaatIni = 0;
 let jawabanSiswa = []; 
 let statusRagu = [];   
@@ -18,35 +18,34 @@ async function mulaiUjian() {
     dataSiswa.mapel = document.getElementById("input-mapel").value;
 
     if (!dataSiswa.nama || !dataSiswa.kelas || !dataSiswa.mapel) {
-        alert("Mohon lengkapi Nama, Kelas, dan Proyek!"); return;
+        alert("Mohon lengkapi Nama, Kelas, dan Mata Pelajaran!"); return;
     }
 
-    // Tampilkan pesan loading sementara mengambil soal
     const tombolMulai = document.querySelector("#halaman-login button");
     const teksAsli = tombolMulai.innerText;
-    tombolMulai.innerText = "Mengunduh Soal... Mohon Tunggu";
+    tombolMulai.innerText = "Mencari Soal... Mohon Tunggu";
     tombolMulai.disabled = true;
 
     try {
-        // MENGAMBIL SOAL DARI GOOGLE SHEETS (Fungsi doGet)
         const response = await fetch(URL_DATABASE);
-        bankSoal = await response.json();
+        const semuaSoal = await response.json();
+
+        // FITUR BARU: Menyaring soal berdasarkan mata pelajaran yang dipilih siswa
+        bankSoal = semuaSoal.filter(soal => soal.mapel === dataSiswa.mapel);
 
         if (bankSoal.length === 0) {
-            alert("Bank soal kosong! Mohon isi data soal di Google Sheets.");
+            alert("Maaf, belum ada soal untuk mata pelajaran '" + dataSiswa.mapel + "' di sistem.");
             tombolMulai.innerText = teksAsli;
             tombolMulai.disabled = false;
             return;
         }
 
-        // Persiapan Lembar Jawaban
         jawabanSiswa = new Array(bankSoal.length).fill(null);
         statusRagu = new Array(bankSoal.length).fill(false);
 
-        // Masuk ke Halaman Ujian
         document.getElementById("halaman-login").style.display = "none";
         document.getElementById("halaman-ujian").style.display = "block";
-        document.getElementById("info-siswa").innerText = dataSiswa.nama;
+        document.getElementById("info-siswa").innerText = dataSiswa.nama + " (" + dataSiswa.mapel + ")";
         
         sisaWaktu = WAKTU_UJIAN_MENIT * 60;
         jalankanTimer();
