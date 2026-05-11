@@ -30,11 +30,12 @@ async function mulaiUjian() {
         const response = await fetch(URL_DATABASE);
         const semuaSoal = await response.json();
 
-        // FITUR BARU: Menyaring soal berdasarkan mata pelajaran yang dipilih siswa
-        bankSoal = semuaSoal.filter(soal => soal.mapel === dataSiswa.mapel);
+        // FITUR BARU: Menyaring soal berdasarkan Mapel DAN Kelas secara bersamaan
+        bankSoal = semuaSoal.filter(soal => soal.mapel === dataSiswa.mapel && soal.kelas === dataSiswa.kelas);
 
         if (bankSoal.length === 0) {
-            alert("Maaf, belum ada soal untuk mata pelajaran '" + dataSiswa.mapel + "' di sistem.");
+            // Pesan error diperbarui agar lebih spesifik
+            alert("Maaf, belum ada soal untuk " + dataSiswa.mapel + " tingkat " + dataSiswa.kelas + " di sistem.");
             tombolMulai.innerText = teksAsli;
             tombolMulai.disabled = false;
             return;
@@ -45,7 +46,7 @@ async function mulaiUjian() {
 
         document.getElementById("halaman-login").style.display = "none";
         document.getElementById("halaman-ujian").style.display = "block";
-        document.getElementById("info-siswa").innerText = dataSiswa.nama + " (" + dataSiswa.mapel + ")";
+        document.getElementById("info-siswa").innerText = dataSiswa.nama + " - " + dataSiswa.kelas + " (" + dataSiswa.mapel + ")";
         
         sisaWaktu = WAKTU_UJIAN_MENIT * 60;
         jalankanTimer();
@@ -59,7 +60,6 @@ async function mulaiUjian() {
         tombolMulai.disabled = false;
     }
 }
-
 function jalankanTimer() {
     clearInterval(intervalWaktu);
     intervalWaktu = setInterval(() => {
