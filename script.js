@@ -1,5 +1,5 @@
 // --- 1. KONFIGURASI ---
-const URL_DATABASE = "URL_WEB_APP_ANDA_DISINI";
+const URL_DATABASE = "https://script.google.com/macros/s/AKfycbwzcZWkup1RTL1v-9qDJgoTI3npt-ys5w0l0c7Zfig9ZQV8UdbcE1VHzOsuiT3DJId7/exec";
 const WAKTU_UJIAN_MENIT = 60; 
 
 let bankSoal = []; 
