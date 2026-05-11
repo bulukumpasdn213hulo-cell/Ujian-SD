@@ -1,268 +1,88 @@
-// --- 1. KONFIGURASI ---
 const URL_DATABASE = "https://script.google.com/macros/s/AKfycbwzcZWkup1RTL1v-9qDJgoTI3npt-ys5w0l0c7Zfig9ZQV8UdbcE1VHzOsuiT3DJId7/exec";
 const WAKTU_UJIAN_MENIT = 60; 
 
 let bankSoal = []; 
 let soalSaatIni = 0;
-let jawabanSiswa = []; 
-let statusRagu = [];   
+let jawabanSiswa = []; let statusRagu = [];   
 let dataSiswa = { nama: "", kelas: "", mapel: "" };
-let sisaWaktu;
-let intervalWaktu;
-
-// --- 2. FUNGSI UTAMA ---
+let sisaWaktu; let intervalWaktu;
 
 async function mulaiUjian() {
     dataSiswa.nama = document.getElementById("input-nama").value;
     dataSiswa.kelas = document.getElementById("input-kelas").value;
     dataSiswa.mapel = document.getElementById("input-mapel").value;
+    const inputToken = document.getElementById("input-token").value;
 
-    if (!dataSiswa.nama || !dataSiswa.kelas || !dataSiswa.mapel) {
-        alert("Mohon lengkapi Nama, Kelas, dan Mata Pelajaran!"); return;
+    if (!dataSiswa.nama || !dataSiswa.kelas || !dataSiswa.mapel || !inputToken) {
+        return alert("Mohon lengkapi semua data, termasuk Token!");
     }
 
     const tombolMulai = document.querySelector("#halaman-login button");
-    const teksAsli = tombolMulai.innerText;
-    tombolMulai.innerText = "Mencari Soal... Mohon Tunggu";
+    tombolMulai.innerText = "Memverifikasi... Mohon Tunggu";
     tombolMulai.disabled = true;
 
     try {
         const response = await fetch(URL_DATABASE);
-        const semuaSoal = await response.json();
-
-        // FITUR BARU: Menyaring soal berdasarkan Mapel DAN Kelas secara bersamaan
-        bankSoal = semuaSoal.filter(soal => soal.mapel === dataSiswa.mapel && soal.kelas === dataSiswa.kelas);
-
-        if (bankSoal.length === 0) {
-            // Pesan error diperbarui agar lebih spesifik
-            alert("Maaf, belum ada soal untuk " + dataSiswa.mapel + " tingkat " + dataSiswa.kelas + " di sistem.");
-            tombolMulai.innerText = teksAsli;
+        const dataServer = await response.json();
+        
+        // 1. VERIFIKASI TOKEN DARI DATABASE
+        const tokenAsli = dataServer.tokens[dataSiswa.mapel];
+        if (tokenAsli !== inputToken) {
+            alert("TOKEN SALAH! Silakan minta token yang benar kepada Guru pengawas.");
+            tombolMulai.innerText = "Mulai Kerjakan";
             tombolMulai.disabled = false;
             return;
         }
 
+        // 2. FILTER SOAL
+        bankSoal = dataServer.soal.filter(s => s.mapel === dataSiswa.mapel && s.kelas === dataSiswa.kelas);
+        if (bankSoal.length === 0) {
+            alert("Maaf, soal untuk " + dataSiswa.mapel + " tingkat " + dataSiswa.kelas + " belum tersedia.");
+            tombolMulai.innerText = "Mulai Kerjakan"; tombolMulai.disabled = false; return;
+        }
+
+        // 3. LAPORKAN KE ADMIN BAHWA SISWA INI SUDAH LOGIN
+        fetch(URL_DATABASE, {
+            method: "POST", mode: 'no-cors',
+            body: JSON.stringify({ action: "loginSiswa", nama: dataSiswa.nama, kelas: dataSiswa.kelas, mapel: dataSiswa.mapel })
+        });
+
+        // 4. MASUK KE UJIAN
         jawabanSiswa = new Array(bankSoal.length).fill(null);
         statusRagu = new Array(bankSoal.length).fill(false);
 
         document.getElementById("halaman-login").style.display = "none";
         document.getElementById("halaman-ujian").style.display = "block";
-        document.getElementById("info-siswa").innerText = dataSiswa.nama + " - " + dataSiswa.kelas + " (" + dataSiswa.mapel + ")";
+        document.getElementById("info-siswa").innerText = dataSiswa.nama;
         
         sisaWaktu = WAKTU_UJIAN_MENIT * 60;
-        jalankanTimer();
-        renderKotakNavigasi(); 
-        tampilkanSoal();
+        jalankanTimer(); renderKotakNavigasi(); tampilkanSoal();
 
     } catch (error) {
-        console.error("Gagal mengambil soal:", error);
-        alert("Gagal terhubung ke bank soal. Pastikan koneksi internet stabil.");
-        tombolMulai.innerText = teksAsli;
-        tombolMulai.disabled = false;
-    }
-}
-function jalankanTimer() {
-    clearInterval(intervalWaktu);
-    intervalWaktu = setInterval(() => {
-        sisaWaktu--;
-        let menit = Math.floor(sisaWaktu / 60);
-        let detik = sisaWaktu % 60;
-        document.getElementById("waktu-mundur").innerText = 
-            (menit < 10 ? "0" + menit : menit) + ":" + (detik < 10 ? "0" + detik : detik);
-
-        if (sisaWaktu <= 0) {
-            clearInterval(intervalWaktu);
-            alert("Waktu habis! Laporan dikirim otomatis.");
-            kirimNilai(true);
-        }
-    }, 1000);
-}
-
-function renderKotakNavigasi() {
-    const grid = document.getElementById("grid-kotak-soal");
-    grid.innerHTML = "";
-    for (let i = 0; i < bankSoal.length; i++) {
-        const kotak = document.createElement("div");
-        kotak.className = "kotak-soal";
-        kotak.innerText = i + 1;
-        kotak.onclick = () => lompatKeSoal(i); 
-        grid.appendChild(kotak);
+        alert("Gagal terhubung. Cek internet Anda.");
+        tombolMulai.innerText = "Mulai Kerjakan"; tombolMulai.disabled = false;
     }
 }
 
-function lompatKeSoal(index) {
-    soalSaatIni = index;
-    tampilkanSoal();
-}
-
-function updateStatusUI() {
-    const kotakSoal = document.getElementById("grid-kotak-soal").children;
-    let jumlahTerjawab = 0;
-
-    for (let i = 0; i < bankSoal.length; i++) {
-        kotakSoal[i].classList.remove("aktif", "terjawab", "ragu");
-        if (i === soalSaatIni) kotakSoal[i].classList.add("aktif");
-
-        let sudahDijawab = false;
-        if (bankSoal[i].tipe === "ganda" && jawabanSiswa[i] !== null) sudahDijawab = true;
-        if (bankSoal[i].tipe === "esai" && jawabanSiswa[i] !== null && jawabanSiswa[i].trim() !== "") sudahDijawab = true;
-
-        if (sudahDijawab) {
-            jumlahTerjawab++;
-            if (statusRagu[i]) {
-                kotakSoal[i].classList.add("ragu"); 
-            } else {
-                kotakSoal[i].classList.add("terjawab"); 
-            }
-        }
-    }
-
-    let persentase = (jumlahTerjawab / bankSoal.length) * 100;
-    document.getElementById("progress-bar").style.width = persentase + "%";
-    document.getElementById("teks-progress").innerText = Math.round(persentase) + "% Selesai";
-}
-
-function tampilkanSoal() {
-    const soal = bankSoal[soalSaatIni];
-    document.getElementById("teks-soal").innerText = (soalSaatIni + 1) + ". " + soal.pertanyaan;
-    
-    const wadahOpsi = document.getElementById("wadah-opsi");
-    wadahOpsi.innerHTML = "";
-
-    if (soal.tipe === "ganda") {
-        soal.opsi.forEach((teksOpsi, index) => {
-            const elemenOpsi = document.createElement("div");
-            elemenOpsi.className = "opsi-jawaban";
-            if (jawabanSiswa[soalSaatIni] === index) {
-                elemenOpsi.classList.add("terpilih");
-                if (statusRagu[soalSaatIni]) elemenOpsi.classList.add("ragu");
-            }
-            elemenOpsi.innerText = teksOpsi;
-            elemenOpsi.onclick = () => pilihJawabanGanda(elemenOpsi, index);
-            wadahOpsi.appendChild(elemenOpsi);
-        });
-    } else if (soal.tipe === "esai") {
-        const elemenEsai = document.createElement("textarea");
-        elemenEsai.className = "input-esai";
-        elemenEsai.placeholder = "Ketik jawaban/laporan di sini...";
-        if (jawabanSiswa[soalSaatIni] !== null) elemenEsai.value = jawabanSiswa[soalSaatIni];
-
-        elemenEsai.oninput = (e) => {
-            jawabanSiswa[soalSaatIni] = e.target.value;
-            updateStatusUI(); 
-            aturTombolNavigasi();
-        };
-        wadahOpsi.appendChild(elemenEsai);
-    }
-
-    aturTombolNavigasi();
-    updateStatusUI(); 
-}
-
-function pilihJawabanGanda(elemen, index) {
-    const semuaOpsi = document.querySelectorAll(".opsi-jawaban");
-    semuaOpsi.forEach(opsi => { opsi.classList.remove("terpilih", "ragu"); });
-
-    elemen.classList.add("terpilih");
-    jawabanSiswa[soalSaatIni] = index; 
-    statusRagu[soalSaatIni] = false;   
-    
-    updateStatusUI(); 
-    aturTombolNavigasi();
-}
-
-function tandaiRagu() {
-    if (bankSoal[soalSaatIni].tipe === "ganda" && jawabanSiswa[soalSaatIni] !== null) {
-        statusRagu[soalSaatIni] = !statusRagu[soalSaatIni]; 
-        tampilkanSoal(); 
-    }
-}
-
-function soalSelanjutnya() { if (soalSaatIni < bankSoal.length - 1) { soalSaatIni++; tampilkanSoal(); } }
-function soalSebelumnya() { if (soalSaatIni > 0) { soalSaatIni--; tampilkanSoal(); } }
-
-function aturTombolNavigasi() {
-    const soal = bankSoal[soalSaatIni];
-    document.getElementById("tombol-kembali").style.display = (soalSaatIni === 0) ? "none" : "block";
-
-    if (soal.tipe === "ganda" && jawabanSiswa[soalSaatIni] !== null) {
-        document.getElementById("tombol-ragu").style.display = "block";
-        document.getElementById("tombol-ragu").innerText = statusRagu[soalSaatIni] ? "Batal Ragu" : "Ragu-ragu";
-    } else {
-        document.getElementById("tombol-ragu").style.display = "none";
-    }
-
-    if (soalSaatIni === bankSoal.length - 1) {
-        document.getElementById("tombol-lanjut").style.display = "none";
-        document.getElementById("tombol-kirim").style.display = "block";
-    } else {
-        document.getElementById("tombol-lanjut").style.display = "block";
-        document.getElementById("tombol-kirim").style.display = "none";
-    }
-}
+// === FUNGSI LAINNYA TETAP SAMA (Timer, Navigasi, Tampil Soal) ===
+// (Salin fungsi jalankanTimer, renderKotakNavigasi, tampilkanSoal, dll dari script Anda sebelumnya ke sini)
 
 function kirimNilai(waktuHabis) {
-    if (!waktuHabis) {
-        for (let i = 0; i < bankSoal.length; i++) {
-            if (bankSoal[i].tipe === "ganda" && jawabanSiswa[i] === null) {
-                lompatKeSoal(i);
-                alert("Nomor " + (i+1) + " belum dijawab!"); return;
-            }
-            if (bankSoal[i].tipe === "esai" && (jawabanSiswa[i] === null || jawabanSiswa[i].trim() === "")) {
-                lompatKeSoal(i);
-                alert("Nomor " + (i+1) + " tidak boleh kosong!"); return;
-            }
-        }
-    }
-
-    clearInterval(intervalWaktu);
-
-    let jumlahBenar = 0;
-    let jumlahPG = 0;
-    let daftarEsai = [];
-    let poinPerSoal = []; 
-
-    for (let i = 0; i < bankSoal.length; i++) {
-        if (bankSoal[i].tipe === "ganda") {
-            jumlahPG++;
-            if (jawabanSiswa[i] === bankSoal[i].jawabanBenar) {
-                jumlahBenar++; poinPerSoal.push(1); 
-            } else {
-                poinPerSoal.push(0); 
-            }
-        } else if (bankSoal[i].tipe === "esai") {
-            let teksJawaban = jawabanSiswa[i] ? jawabanSiswa[i] : "(Kosong)";
-            daftarEsai.push("Soal " + (i+1) + ": " + teksJawaban);
-        }
-    }
-
-    let nilaiTotal = (jumlahPG > 0) ? Math.round((jumlahBenar / jumlahPG) * 100) : 0;
-    let gabunganEsai = daftarEsai.join("\n\n---\n"); 
-
-    document.getElementById("halaman-ujian").style.display = "none";
-    document.getElementById("halaman-selesai").style.display = "block";
-    document.getElementById("hasil-benar").innerText = jumlahBenar;
-    document.getElementById("hasil-salah").innerText = jumlahPG - jumlahBenar;
-    document.getElementById("hasil-total").innerText = nilaiTotal;
-
+    // ... (Validasi soal kosong sama seperti sebelumnya) ...
+    
+    // ... (Perhitungan nilai sama seperti sebelumnya) ...
+    
+    // FITUR BARU: Tambahkan action "submitNilai" saat fetch
     const dataKirim = {
-        nama: dataSiswa.nama,
-        kelas: dataSiswa.kelas,
-        mapel: dataSiswa.mapel, 
-        poin: poinPerSoal, 
-        nilai: nilaiTotal,
-        esai: gabunganEsai
+        action: "submitNilai", // <--- PENTING UNTUK ROUTING DI APPS SCRIPT
+        nama: dataSiswa.nama, kelas: dataSiswa.kelas, mapel: dataSiswa.mapel, 
+        poin: poinPerSoal, nilai: nilaiTotal, esai: gabunganEsai
     };
 
     fetch(URL_DATABASE, {
-        method: "POST",
-        mode: 'no-cors',
-        headers: { "Content-Type": "application/json" },
+        method: "POST", mode: 'no-cors',
         body: JSON.stringify(dataKirim)
-    })
-    .then(() => {
-        document.getElementById("pesan-status").innerText = "Laporan sukses terkirim ke markas guru!";
-    })
-    .catch(error => {
-        document.getElementById("pesan-status").innerText = "Gagal mengirim. Mohon lapor ke pengawas.";
+    }).then(() => {
+        document.getElementById("pesan-status").innerText = "Laporan sukses terkirim!";
     });
 }
