@@ -3,21 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ujian CBT Sekolah</title>
+    <title>Ujian CBT SD Negeri 213 Hulo</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         
-        <!-- Halaman Login -->
         <div id="halaman-login">
-            <!-- Logo Tut Wuri Handayani di Tengah -->
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Logo_of_Ministry_of_Education_and_Culture_of_Republic_of_Indonesia.svg/500px-Logo_of_Ministry_of_Education_and_Culture_of_Republic_of_Indonesia.svg.png" alt="Logo Tut Wuri Handayani" style="width: 100px; height: auto; display: block; margin: 0 auto 15px auto;">
             
             <h3 style="margin: 5px 0 20px 0; color: #2c3e50; font-weight: 800;">SD NEGERI 213 HULO</h3>
             
             <h2>Selamat Datang!</h2>
             <p>Silakan isi data diri sebelum memulai ujian</p>
+            
             <input type="text" id="input-nama" placeholder="Tulis Nama Lengkap" required>
             
             <select id="input-kelas">
@@ -31,14 +30,16 @@
             </select>
 
             <select id="input-mapel">
-                <input type="text" id="input-token" placeholder="Masukkan Token Ujian" required>
                 <option value="">-- Pilih Mata Pelajaran / Proyek --</option>
-                
                 <option value="Pendidikan Agama dan Budi Pekerti">Pendidikan Agama dan Budi Pekerti</option>
                 <option value="Pendidikan Pancasila">Pendidikan Pancasila</option>
                 <option value="Bahasa Indonesia">Bahasa Indonesia</option>
                 <option value="Matematika">Matematika</option>
+                
                 <option value="Ilmu Pengetahuan Alam dan Sosial (IPAS)">Ilmu Pengetahuan Alam dan Sosial (IPAS)</option>
+                <option value="Ilmu Pengetahuan Alam (IPA)">Ilmu Pengetahuan Alam (IPA)</option>
+                <option value="Ilmu Pengetahuan Sosial (IPS)">Ilmu Pengetahuan Sosial (IPS)</option>
+                
                 <option value="PJOK">PJOK (Olahraga)</option>
                 <option value="Seni Budaya / SBdP">Seni Budaya / SBdP</option>
                 <option value="Bahasa Inggris">Bahasa Inggris</option>
@@ -48,23 +49,22 @@
                 <option value="PjBL - Detektif Plastik">PjBL - Detektif Plastik</option>
             </select>
 
+            <input type="text" id="input-token" placeholder="Masukkan Token Ujian" required>
+
             <button onclick="mulaiUjian()">Mulai Kerjakan</button>
         </div>
 
-        <!-- Halaman Soal Ujian -->
         <div id="halaman-ujian" style="display: none;">
             <div class="header-ujian">
                 <span id="info-siswa" style="font-weight: bold; color: #333;"></span>
                 <span style="color: #d9534f; font-weight: bold; background: #fdf2f2; padding: 5px 10px; border-radius: 5px;">Waktu: <span id="waktu-mundur">00:00</span></span>
             </div>
 
-            <!-- Bilah Kemajuan (Progress Bar) -->
             <div class="progress-wadah">
                 <div id="progress-bar"></div>
             </div>
             <div style="text-align: right; font-size: 12px; color: #666; margin-bottom: 10px;" id="teks-progress">0% Selesai</div>
 
-            <!-- Palet Kotak Navigasi Soal -->
             <div class="panel-navigasi">
                 <p style="font-size: 12px; margin: 0 0 5px 0; color: #555; text-align: left;">Peta Soal (Klik untuk melompat):</p>
                 <div id="grid-kotak-soal"></div>
@@ -83,7 +83,6 @@
             </div>
         </div>
 
-        <!-- Halaman Selesai -->
         <div id="halaman-selesai" style="display: none;">
             <h2>Ujian Selesai!</h2>
             <div class="kartu-hasil">
@@ -98,7 +97,9 @@
             </div>
             <p id="pesan-status" style="margin-top: 20px; font-weight: bold;">Sedang menyinkronkan data ke server...</p>
         </div>
+
     </div>
+    
     <script src="script.js"></script>
 </body>
 </html>
