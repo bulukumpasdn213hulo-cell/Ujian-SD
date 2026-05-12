@@ -189,11 +189,29 @@ function tandaiRagu() { statusRagu[soalSaatIni] = !statusRagu[soalSaatIni]; tamp
 // --- 4. KIRIM HASIL AKHIR ---
 function kirimNilai(waktuHabis) {
     if (!waktuHabis) {
+        // 1. Validasi Pertama: Cek apakah ada soal yang belum diisi (Kosong)
         let kosong = jawabanSiswa.findIndex((j, i) => j === null || (bankSoal[i].tipe === "esai" && j.trim() === ""));
-        if (kosong !== -1) { alert("Nomor " + (kosong+1) + " belum diisi!"); soalSaatIni = kosong; tampilkanSoal(); return; }
-        if (!confirm("Kirim jawaban sekarang?")) return;
+        if (kosong !== -1) { 
+            alert("Nomor " + (kosong+1) + " belum diisi! Silakan isi terlebih dahulu."); 
+            soalSaatIni = kosong; 
+            tampilkanSoal(); 
+            return; 
+        }
+
+        // 2. Validasi Kedua (FITUR BARU): Cek apakah ada yang masih ditandai Ragu-ragu
+        let ragu = statusRagu.findIndex(status => status === true);
+        if (ragu !== -1) {
+            alert("Peringatan: Soal nomor " + (ragu+1) + " masih ditandai 'Ragu-ragu'. \nSilakan tentukan jawaban Anda dan klik tombol 'Batal Ragu' sebelum mengirim ujian.");
+            soalSaatIni = ragu; // Melempar siswa ke soal yang ragu-ragu
+            tampilkanSoal();
+            return;
+        }
+
+        // 3. Jika aman dari kosong dan ragu-ragu, minta konfirmasi akhir
+        if (!confirm("Kirim jawaban sekarang? Pastikan Anda sudah mengecek kembali semua jawaban Anda.")) return;
     }
 
+    // --- PROSES PENGIRIMAN DATA (Sama seperti sebelumnya) ---
     clearInterval(intervalWaktu);
     let benar = 0, pg = 0, esai = [], poin = [];
 
