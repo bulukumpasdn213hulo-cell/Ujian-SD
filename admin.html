@@ -3,183 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CBT Admin Panel - SDN 213 Hulo</title>
+    <title>CBT Admin Pro - SDN 213 Hulo</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; background: #2c3e50; color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; }
-        .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px;}
+        :root { --primary: #2c3e50; --success: #27ae60; --warning: #f39c12; --danger: #e74c3c; --blue: #3498db; --light: #f8f9fa; }
+        body { font-family: 'Segoe UI', sans-serif; background: #eaeff2; margin: 0; padding: 20px; }
+        .container { max-width: 1300px; margin: auto; }
+        
+        /* Header */
+        .header { background: var(--primary); color: white; padding: 20px 30px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        
+        /* Statistik Atas */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 20px; margin-bottom: 25px; }
+        .stat-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .stat-card h3 { margin: 0; color: #7f8c8d; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-card p { margin: 10px 0 0; font-size: 36px; font-weight: 800; color: var(--primary); }
+        .chart-card { background: white; padding: 15px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; align-items: center; }
+
+        /* Tabel & Filter */
+        .main-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .filter-row { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; background: var(--light); padding: 15px; border-radius: 10px; }
+        
+        select, input { padding: 10px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; min-width: 180px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; font-size: 14px;}
-        th { background: #f8f9fa; }
-        input, select, button { padding: 8px; margin: 5px 0; width: 100%; box-sizing: border-box;}
-        button { background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;}
-        .btn-blue { background: #3498db; }
-        .btn-gray { background: #6c757d; }
-        .status-aktif { color: #f39c12; font-weight: bold; }
-        .status-selesai { color: #28a745; font-weight: bold; }
+        th { background: #f1f3f5; padding: 15px; text-align: left; border-bottom: 2px solid #dee2e6; font-size: 13px; color: #495057; }
+        td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }
+        
+        /* Tombol */
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+        .btn-refresh { background: var(--blue); color: white; }
+        .btn-excel { background: var(--success); color: white; }
+        .btn-pdf { background: var(--danger); color: white; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .badge { padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .badge-active { background: #fff4e5; color: #b45d00; }
+        .badge-done { background: #e6ffed; color: #008a2e; }
     </style>
 </head>
 <body>
+
+<div class="container">
     <div class="header">
-        <h2>Dashboard Admin - SD Negeri 213 Hulo</h2>
-        <button onclick="loadData()" class="btn-blue" style="width: auto;">🔄 Segarkan Data</button>
+        <div>
+            <h1 style="margin:0; font-size: 26px;">Dashboard Admin SDN 213 Hulo</h1>
+            <p style="margin:5px 0 0; opacity: 0.8; font-size: 13px;">Sistem Monitoring & Rekap Nilai Terintegrasi</p>
+        </div>
+        <button onclick="loadData()" class="btn btn-refresh">🔄 Segarkan Data</button>
     </div>
 
-    <div class="grid">
-        <div>
-            <div class="card">
-                <h3>Manajemen Token Ujian</h3>
-                <input type="text" id="mapel-token" placeholder="Nama Mata Pelajaran (Contoh: Matematika)">
-                <input type="text" id="kode-token" placeholder="Ketik Token Baru (Contoh: MTK123)">
-                <button onclick="updateToken()">Simpan Token</button>
-                <p id="pesan-token" style="font-size: 12px; color: green;"></p>
-            </div>
-
-            <div class="card" style="border: 2px dashed #3498db;">
-                <h3>Upload Bank Soal (CSV)</h3>
-                <p style="font-size: 12px; color: #666; margin-top:0;">1. Unduh template, isi soal, lalu simpan kembali sebagai CSV.<br>2. Upload file tersebut untuk menambah soal massal.</p>
-                <div style="display: flex; gap: 10px;">
-                    <button onclick="downloadTemplate()" class="btn-gray">📥 Unduh Template</button>
-                    <input type="file" id="fileCsv" accept=".csv" style="display: none;" onchange="prosesUpload(this)">
-                    <button onclick="document.getElementById('fileCsv').click()">📤 Upload File Soal</button>
-                </div>
-                <p id="status-upload" style="font-size: 12px; margin-top: 10px; font-weight: bold;"></p>
-            </div>
-            
-            <div class="card">
-                <h3>Statistik Partisipasi</h3>
-                <canvas id="pieChart"></canvas>
-            </div>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Siswa Sedang Ujian</h3>
+            <p id="count-aktif">0</p>
         </div>
+        <div class="stat-card">
+            <h3>Siswa Selesai</h3>
+            <p id="count-selesai">0</p>
+        </div>
+        <div class="chart-card">
+            <h4 style="margin:0 0 10px 0; font-size: 13px; color: #7f8c8d;">PARTISIPASI REAL-TIME</h4>
+            <canvas id="pieChart" style="max-height: 160px;"></canvas>
+        </div>
+    </div>
 
-        <div class="card">
-            <h3>Aktivitas Siswa Terkini</h3>
-            <table>
+    <div class="main-card">
+        <h3 style="margin-top:0; border-left: 5px solid var(--blue); padding-left: 15px;">Monitoring Kehadiran Siswa</h3>
+        <div class="filter-row">
+            <select id="f-kelas-live" onchange="filterData('live')">
+                <option value="">Semua Kelas</option>
+                <option value="Kelas 1">Kelas 1</option><option value="Kelas 2">Kelas 2</option>
+                <option value="Kelas 3">Kelas 3</option><option value="Kelas 4">Kelas 4</option>
+                <option value="Kelas 5">Kelas 5</option><option value="Kelas 6">Kelas 6</option>
+            </select>
+            <select id="f-mapel-live" onchange="filterData('live')">
+                <option value="">Semua Mapel</option>
+                <option value="Matematika">Matematika</option>
+                <option value="Bahasa Indonesia">Bahasa Indonesia</option>
+                <option value="IPAS">IPAS</option>
+            </select>
+        </div>
+        <div style="overflow-x: auto;">
+            <table id="table-live">
                 <thead>
-                    <tr><th>Waktu</th><th>Nama</th><th>Kelas</th><th>Mapel</th><th>Status</th></tr>
+                    <tr><th>Waktu Login</th><th>Nama Lengkap</th><th>Kelas</th><th>Mata Pelajaran</th><th>Status</th></tr>
                 </thead>
-                <tbody id="tabel-aktivitas">
-                    <tr><td colspan="5">Memuat data...</td></tr>
-                </tbody>
+                <tbody></tbody>
             </table>
         </div>
     </div>
 
-    <script>
-        // PENTING: GANTI LINK DI BAWAH INI DENGAN LINK APPS SCRIPT ANDA
-        const URL_DATABASE = "https://script.google.com/macros/s/AKfycbwzcZWkup1RTL1v-9qDJgoTI3npt-ys5w0l0c7Zfig9ZQV8UdbcE1VHzOsuiT3DJId7/exec"; 
-        
-        let myChart;
+    <div class="main-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin:0; border-left: 5px solid var(--success); padding-left: 15px;">Rekap Nilai Siswa</h3>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="exportExcel()" class="btn btn-excel">📗 Simpan Excel</button>
+                <button onclick="exportPDF()" class="btn btn-pdf">📕 Cetak PDF</button>
+            </div>
+        </div>
+        <div class="filter-row">
+            <select id="f-kelas-nilai" onchange="filterData('nilai')">
+                <option value="">Filter Per Kelas</option>
+                <option value="Kelas 1">Kelas 1</option><option value="Kelas 6">Kelas 6</option>
+            </select>
+            <input type="text" id="f-nama-nilai" onkeyup="filterData('nilai')" placeholder="Cari Nama Siswa...">
+        </div>
+        <div style="overflow-x: auto;">
+            <table id="table-nilai">
+                <thead>
+                    <tr><th>Tanggal</th><th>Nama</th><th>Kelas</th><th>Mata Pelajaran</th><th>Skor Akhir</th></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
-        async function loadData() {
-            try {
-                const response = await fetch(URL_DATABASE + "?action=getAdminData");
-                const data = await response.json();
-                
-                const tbody = document.getElementById("tabel-aktivitas");
-                tbody.innerHTML = "";
-                let aktif = 0; let selesai = 0;
+<script>
+    // MASUKKAN LINK WEB APP ANDA DI SINI
+    const URL_DATABASE = "https://script.google.com/macros/s/AKfycbwzcZWkup1RTL1v-9qDJgoTI3npt-ys5w0l0c7Zfig9ZQV8UdbcE1VHzOsuiT3DJId7/exec"; 
+    
+    let masterData = { aktivitas: [], hasilUjian: [] };
+    let myChart;
 
-                const aktivitas = data.aktivitas.slice(1).reverse();
-                aktivitas.forEach((row, index) => {
-                    if (row[4] === "Mengerjakan") aktif++;
-                    if (row[4] === "Selesai") selesai++;
+    async function loadData() {
+        try {
+            const response = await fetch(URL_DATABASE + "?action=getAdminData");
+            const data = await response.json();
+            masterData = data;
+            renderAll();
+        } catch(e) { alert("Gagal mengambil data dari server."); }
+    }
 
-                    if(index < 15) {
-                        let statusClass = row[4] === "Selesai" ? "status-selesai" : "status-aktif";
-                        tbody.innerHTML += `<tr>
-                            <td>${new Date(row[0]).toLocaleTimeString()}</td>
-                            <td>${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td>
-                            <td class="${statusClass}">${row[4]}</td>
-                        </tr>`;
-                    }
-                });
+    function renderAll() {
+        // Render Tabel Live
+        const tbodyLive = document.querySelector("#table-live tbody");
+        tbodyLive.innerHTML = "";
+        let aktif = 0, selesai = 0;
 
-                if(myChart) myChart.destroy();
-                const ctx = document.getElementById('pieChart').getContext('2d');
-                myChart = new Chart(ctx, {
-                    type: 'pie',
-                    data: {
-                        labels: ['Sedang Mengerjakan', 'Selesai Ujian'],
-                        datasets: [{ data: [aktif, selesai], backgroundColor: ['#f39c12', '#28a745'] }]
-                    }
-                });
-            } catch(e) { 
-                console.error("Gagal load:", e);
-                alert("Gagal memuat data. Cek koneksi internet dan link Apps Script."); 
-            }
-        }
-
-        function updateToken() {
-            const mapel = document.getElementById("mapel-token").value;
-            const token = document.getElementById("kode-token").value;
-            if(!mapel || !token) return alert("Isi Mapel dan Token!");
-
-            fetch(URL_DATABASE, {
-                method: "POST", mode: 'no-cors',
-                body: JSON.stringify({ action: "updateToken", mapel: mapel, token: token })
-            }).then(() => {
-                document.getElementById("pesan-token").innerText = "Token berhasil diupdate!";
-                setTimeout(() => document.getElementById("pesan-token").innerText = "", 3000);
-            });
-        }
-
-        function downloadTemplate() {
-            const headers = "Tipe,Mata Pelajaran,Kelas,Pertanyaan,Link Gambar,Opsi A,Opsi B,Opsi C,Opsi D,Kunci Jawaban\n";
-            const example = "ganda,Matematika,Kelas 5,Berapa hasil 5x5?,https://link-gambar.com/gbr.jpg,10,25,30,35,1";
-            const blob = new Blob([headers + example], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'Template_Soal_SDN213.csv';
-            a.click();
-        }
-
-        function prosesUpload(input) {
-            const file = input.files[0];
-            if (!file) return;
-
-            document.getElementById("status-upload").innerText = "Sedang memproses file...";
-            document.getElementById("status-upload").style.color = "#f39c12";
+        masterData.aktivitas.slice(1).reverse().forEach(row => {
+            if(row[4] === "Mengerjakan") aktif++;
+            if(row[4] === "Selesai") selesai++;
             
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                const baris = text.split(/\r?\n/);
-                const payload = [];
+            tbodyLive.innerHTML += `<tr>
+                <td>${new Date(row[0]).toLocaleTimeString()}</td>
+                <td>${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td>
+                <td><span class="badge ${row[4] === 'Selesai' ? 'badge-done' : 'badge-active'}">${row[4]}</span></td>
+            </tr>`;
+        });
 
-                for (let i = 1; i < baris.length; i++) {
-                    if (baris[i].trim() === "") continue;
-                    const kolom = baris[i].split(/[;,](?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    if (kolom.length >= 10) {
-                        payload.push(kolom.slice(0, 10).map(k => k.replace(/^"|"$/g, '').trim()));
-                    }
-                }
+        // Render Tabel Nilai
+        const tbodyNilai = document.querySelector("#table-nilai tbody");
+        tbodyNilai.innerHTML = "";
+        masterData.hasilUjian.slice(1).reverse().forEach(row => {
+            tbodyNilai.innerHTML += `<tr>
+                <td>${new Date(row[0]).toLocaleDateString()}</td>
+                <td>${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td>
+                <td style="font-weight:bold; color:var(--success)">${row[row.length-2]}</td>
+            </tr>`;
+        });
 
-                if (payload.length > 0) {
-                    fetch(URL_DATABASE, {
-                        method: "POST", mode: 'no-cors',
-                        body: JSON.stringify({ action: "uploadBankSoal", payload: payload })
-                    }).then(() => {
-                        document.getElementById("status-upload").innerText = "✅ Sukses! " + payload.length + " soal ditambahkan.";
-                        document.getElementById("status-upload").style.color = "green";
-                        input.value = ""; 
-                    }).catch(() => {
-                        document.getElementById("status-upload").innerText = "❌ Gagal mengunggah soal.";
-                        document.getElementById("status-upload").style.color = "red";
-                    });
-                } else {
-                    document.getElementById("status-upload").innerText = "❌ Format CSV salah atau kosong.";
-                    document.getElementById("status-upload").style.color = "red";
-                }
-            };
-            reader.readAsText(file);
-        }
+        document.getElementById("count-aktif").innerText = aktif;
+        document.getElementById("count-selesai").innerText = selesai;
+        updateChart(aktif, selesai);
+    }
 
-        // Jalankan load data saat halaman dibuka
-        window.onload = loadData;
-    </script>
+    function updateChart(aktif, selesai) {
+        if(myChart) myChart.destroy();
+        const ctx = document.getElementById('pieChart').getContext('2d');
+        myChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Aktif', 'Selesai'],
+                datasets: [{ data: [aktif, selesai], backgroundColor: ['#f39c12', '#27ae60'], borderWidth: 0 }]
+            },
+            options: { plugins: { legend: { position: 'right' } } }
+        });
+    }
+
+    function filterData(mode) {
+        const kelas = document.getElementById(mode === 'live' ? "f-kelas-live" : "f-kelas-nilai").value;
+        const targetTable = mode === 'live' ? "#table-live" : "#table-nilai";
+        const rows = document.querySelectorAll(targetTable + " tbody tr");
+        const cariNama = mode === 'nilai' ? document.getElementById("f-nama-nilai").value.toLowerCase() : "";
+
+        rows.forEach(row => {
+            const txtKelas = row.cells[2].innerText;
+            const txtNama = row.cells[1].innerText.toLowerCase();
+            const matchKelas = kelas === "" || txtKelas === kelas;
+            const matchNama = cariNama === "" || txtNama.includes(cariNama);
+            row.style.display = (matchKelas && matchNama) ? "" : "none";
+        });
+    }
+
+    function exportExcel() {
+        const table = document.getElementById("table-nilai");
+        const wb = XLSX.utils.table_to_book(table);
+        XLSX.writeFile(wb, "Rekap_Nilai_SDN213Hulo.xlsx");
+    }
+
+    function exportPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.text("Rekap Nilai Siswa - SDN 213 Hulo", 14, 15);
+        doc.autoTable({ 
+            html: '#table-nilai', 
+            startY: 20,
+            styles: { fontSize: 9 },
+            headStyles: { fillColor: [44, 62, 80] }
+        });
+        doc.save("Rekap_Nilai_SDN213Hulo.pdf");
+    }
+
+    window.onload = loadData;
+</script>
 </body>
 </html>
