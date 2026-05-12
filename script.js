@@ -137,7 +137,17 @@ function updateStatusUI() {
 
 function tampilkanSoal() {
     const soal = bankSoal[soalSaatIni];
-    document.getElementById("teks-soal").innerText = (soalSaatIni + 1) + ". " + soal.pertanyaan;
+    
+    // FITUR GAMBAR: Menyusun HTML untuk teks soal dan gambar (jika ada)
+    let htmlSoal = (soalSaatIni + 1) + ". " + soal.pertanyaan;
+    
+    if (soal.gambar && soal.gambar !== "") {
+        htmlSoal += `<br><img src="${soal.gambar}" alt="Gambar Soal" style="max-width: 100%; max-height: 250px; margin-top: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">`;
+    }
+    
+    // Menggunakan innerHTML agar tag <img> bisa dirender menjadi gambar sungguhan
+    document.getElementById("teks-soal").innerHTML = htmlSoal;
+    
     const wadah = document.getElementById("wadah-opsi");
     wadah.innerHTML = "";
 
@@ -164,7 +174,6 @@ function tampilkanSoal() {
     aturTombol();
     updateStatusUI();
 }
-
 function aturTombol() {
     document.getElementById("tombol-kembali").style.display = (soalSaatIni === 0) ? "none" : "inline-block";
     document.getElementById("tombol-lanjut").style.display = (soalSaatIni === bankSoal.length - 1) ? "none" : "inline-block";
