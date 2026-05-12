@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CBT Admin Panel</title>
+    <title>CBT Admin Panel - SDN 213 Hulo</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; background: #2c3e50; color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; }
         .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px;}
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; font-size: 14px;}
         th { background: #f8f9fa; }
         input, select, button { padding: 8px; margin: 5px 0; width: 100%; box-sizing: border-box;}
         button { background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;}
+        .btn-blue { background: #3498db; }
+        .btn-gray { background: #6c757d; }
         .status-aktif { color: #f39c12; font-weight: bold; }
         .status-selesai { color: #28a745; font-weight: bold; }
     </style>
@@ -22,17 +24,28 @@
 <body>
     <div class="header">
         <h2>Dashboard Admin - SD Negeri 213 Hulo</h2>
-        <button onclick="loadData()" style="width: auto; background: #3498db;">🔄 Segarkan Data</button>
+        <button onclick="loadData()" class="btn-blue" style="width: auto;">🔄 Segarkan Data</button>
     </div>
 
     <div class="grid">
         <div>
-            <div class="card" style="margin-bottom: 20px;">
+            <div class="card">
                 <h3>Manajemen Token Ujian</h3>
                 <input type="text" id="mapel-token" placeholder="Nama Mata Pelajaran (Contoh: Matematika)">
                 <input type="text" id="kode-token" placeholder="Ketik Token Baru (Contoh: MTK123)">
                 <button onclick="updateToken()">Simpan Token</button>
                 <p id="pesan-token" style="font-size: 12px; color: green;"></p>
+            </div>
+
+            <div class="card" style="border: 2px dashed #3498db;">
+                <h3>Upload Bank Soal (CSV)</h3>
+                <p style="font-size: 12px; color: #666; margin-top:0;">1. Unduh template, isi soal, lalu simpan kembali sebagai CSV.<br>2. Upload file tersebut untuk menambah soal massal.</p>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="downloadTemplate()" class="btn-gray">📥 Unduh Template</button>
+                    <input type="file" id="fileCsv" accept=".csv" style="display: none;" onchange="prosesUpload(this)">
+                    <button onclick="document.getElementById('fileCsv').click()">📤 Upload File Soal</button>
+                </div>
+                <p id="status-upload" style="font-size: 12px; margin-top: 10px; font-weight: bold;"></p>
             </div>
             
             <div class="card">
@@ -55,7 +68,9 @@
     </div>
 
     <script>
+        // PENTING: GANTI LINK DI BAWAH INI DENGAN LINK APPS SCRIPT ANDA
         const URL_DATABASE = "https://script.google.com/macros/s/AKfycbwzcZWkup1RTL1v-9qDJgoTI3npt-ys5w0l0c7Zfig9ZQV8UdbcE1VHzOsuiT3DJId7/exec"; 
+        
         let myChart;
 
         async function loadData() {
@@ -63,12 +78,11 @@
                 const response = await fetch(URL_DATABASE + "?action=getAdminData");
                 const data = await response.json();
                 
-                // Render Tabel Aktivitas (Ambil 15 data terbaru)
                 const tbody = document.getElementById("tabel-aktivitas");
                 tbody.innerHTML = "";
                 let aktif = 0; let selesai = 0;
 
-                const aktivitas = data.aktivitas.slice(1).reverse(); // Balik urutan dari terbaru
+                const aktivitas = data.aktivitas.slice(1).reverse();
                 aktivitas.forEach((row, index) => {
                     if (row[4] === "Mengerjakan") aktif++;
                     if (row[4] === "Selesai") selesai++;
@@ -83,7 +97,6 @@
                     }
                 });
 
-                // Update Pie Chart
                 if(myChart) myChart.destroy();
                 const ctx = document.getElementById('pieChart').getContext('2d');
                 myChart = new Chart(ctx, {
@@ -93,7 +106,10 @@
                         datasets: [{ data: [aktif, selesai], backgroundColor: ['#f39c12', '#28a745'] }]
                     }
                 });
-            } catch(e) { alert("Gagal memuat data. Cek koneksi internet."); }
+            } catch(e) { 
+                console.error("Gagal load:", e);
+                alert("Gagal memuat data. Cek koneksi internet dan link Apps Script."); 
+            }
         }
 
         function updateToken() {
@@ -105,12 +121,65 @@
                 method: "POST", mode: 'no-cors',
                 body: JSON.stringify({ action: "updateToken", mapel: mapel, token: token })
             }).then(() => {
-                document.getElementById("pesan-token").innerText = "Token berhasil diupdate di database!";
+                document.getElementById("pesan-token").innerText = "Token berhasil diupdate!";
                 setTimeout(() => document.getElementById("pesan-token").innerText = "", 3000);
             });
         }
 
-        loadData(); // Jalankan saat pertama dibuka
+        function downloadTemplate() {
+            const headers = "Tipe,Mata Pelajaran,Kelas,Pertanyaan,Link Gambar,Opsi A,Opsi B,Opsi C,Opsi D,Kunci Jawaban\n";
+            const example = "ganda,Matematika,Kelas 5,Berapa hasil 5x5?,https://link-gambar.com/gbr.jpg,10,25,30,35,1";
+            const blob = new Blob([headers + example], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Template_Soal_SDN213.csv';
+            a.click();
+        }
+
+        function prosesUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            document.getElementById("status-upload").innerText = "Sedang memproses file...";
+            document.getElementById("status-upload").style.color = "#f39c12";
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const baris = text.split(/\r?\n/);
+                const payload = [];
+
+                for (let i = 1; i < baris.length; i++) {
+                    if (baris[i].trim() === "") continue;
+                    const kolom = baris[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); 
+                    if (kolom.length >= 10) {
+                        payload.push(kolom.slice(0, 10).map(k => k.replace(/^"|"$/g, '').trim()));
+                    }
+                }
+
+                if (payload.length > 0) {
+                    fetch(URL_DATABASE, {
+                        method: "POST", mode: 'no-cors',
+                        body: JSON.stringify({ action: "uploadBankSoal", payload: payload })
+                    }).then(() => {
+                        document.getElementById("status-upload").innerText = "✅ Sukses! " + payload.length + " soal ditambahkan.";
+                        document.getElementById("status-upload").style.color = "green";
+                        input.value = ""; 
+                    }).catch(() => {
+                        document.getElementById("status-upload").innerText = "❌ Gagal mengunggah soal.";
+                        document.getElementById("status-upload").style.color = "red";
+                    });
+                } else {
+                    document.getElementById("status-upload").innerText = "❌ Format CSV salah atau kosong.";
+                    document.getElementById("status-upload").style.color = "red";
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Jalankan load data saat halaman dibuka
+        window.onload = loadData;
     </script>
 </body>
 </html>
