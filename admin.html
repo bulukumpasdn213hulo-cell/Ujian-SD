@@ -152,7 +152,7 @@
 
                 for (let i = 1; i < baris.length; i++) {
                     if (baris[i].trim() === "") continue;
-                    const kolom = baris[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); 
+                    const kolom = baris[i].split(/[;,](?=(?:(?:[^"]*"){2})*[^"]*$)/);
                     if (kolom.length >= 10) {
                         payload.push(kolom.slice(0, 10).map(k => k.replace(/^"|"$/g, '').trim()));
                     }
